@@ -21,6 +21,8 @@ fi
 printf '%s\n' "$version" | LC_ALL=C grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' || fail 'REFRESHAGENT_VERSION must be a stable vX.Y.Z tag.'
 install_dir=${REFRESHAGENT_INSTALL_DIR:-${HOME:?HOME must be set}/.local/bin}
 case "$install_dir" in /*) ;; *) fail 'REFRESHAGENT_INSTALL_DIR must be an absolute path.' ;; esac
+case "$install_dir" in *'
+'*) fail 'Unsupported control character in installation path.' ;; esac
 if printf '%s' "$install_dir" | LC_ALL=C grep -q '[[:cntrl:]]'; then
   fail 'Unsupported control character in installation path.'
 fi

@@ -78,6 +78,26 @@ else:
         loaded = subprocess.run(['sh', '-c', '. "$1"; command -v refreshagent', 'sh', str(home / '.zprofile')], capture_output=True, text=True)
         self.assertEqual(loaded.stdout.strip(), str(home / '.local/bin/refreshagent'))
 
+    def test_newline_path_is_rejected(self):
+        result, home, _ = self.run_installer(home_name='home\nwith newline')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Unsupported control character', result.stderr)
+        self.assertFalse((home / '.local/bin/refreshagent').exists())
+
+    def test_symlink_install_is_not_replaced(self):
+        result, home, env = self.run_installer()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        binary = home / '.local/bin/refreshagent'
+        original = home / 'package-manager-binary'
+        original.write_bytes(binary.read_bytes())
+        binary.unlink()
+        binary.symlink_to(original)
+        result = subprocess.run(['sh', str(ROOT / 'install.sh')], env=env, capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('symlink', result.stderr)
+        self.assertTrue(binary.is_symlink())
+        self.assertEqual(original.read_bytes(), b"#!/bin/sh\nprintf 'refreshagent 0.1.2\\n'\n")
+
     def test_formula_checksums_and_architectures(self):
         spec = importlib.util.spec_from_file_location('homebrew', ROOT / 'scripts/update_homebrew.py')
         module = importlib.util.module_from_spec(spec)

@@ -12,7 +12,7 @@ Your installed agent handles authentication and model usage under its own plan.
 No Rust compiler is needed. macOS and Linux, Intel/x86_64 and ARM64:
 
 ```sh
-curl -fsSL https://refreshagent.com/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/RefreshAgent/refreshagent/main/install.sh | sh
 ```
 
 The installer verifies the release checksum and executable version, installs to
@@ -47,7 +47,7 @@ Installer options: set `REFRESHAGENT_VERSION=vX.Y.Z` to pin a stable release,
 pass these variables to `sh`, for example:
 
 ```sh
-curl -fsSL https://refreshagent.com/install.sh | REFRESHAGENT_VERSION=v0.1.2 sh
+curl -fsSL https://raw.githubusercontent.com/RefreshAgent/refreshagent/main/install.sh | REFRESHAGENT_VERSION=v0.1.2 sh
 ```
 
 Pinning the installer does not disable subsequent automatic updates; use

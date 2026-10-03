@@ -1,0 +1,2 @@
+Information gain methodology:
+Separate necessary intent coverage from genuinely new information. Preserve provenance. Never invent metrics, quotes, experience or competitor findings. Prefer useful first-party evidence and reproducible derived facts over prose expansion. When no competitor corpus is supplied, do not claim measured novelty against ranking pages. Any prioritization score is an internal heuristic, not a Google ranking factor.

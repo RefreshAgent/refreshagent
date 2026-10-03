@@ -1,0 +1,2 @@
+Computed knowledge methodology:
+Compute rather than summarize. Model claims and evidence before writing. Use code for joins, numbers and comparisons. Distinguish observed, derived and inferred claims. A useful original result should combine relevant dimensions or datasets and explain its provenance and limits. Reject one-page-per-row content without distinctive user value. Never expand page count simply to meet a schedule.

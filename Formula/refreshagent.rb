@@ -2,27 +2,27 @@
 class Refreshagent < Formula
   desc "Autonomous SEO worker using your local coding agent"
   homepage "https://github.com/RefreshAgent/refreshagent"
-  version "0.1.2"
+  version "0.1.3"
   license "Apache-2.0"
 
   on_macos do
     on_arm do
-      url "https://github.com/RefreshAgent/refreshagent/releases/download/v0.1.2/refreshagent-aarch64-apple-darwin"
-      sha256 "122e0f62b2f307ccdc2d039adbec73be7b62c34a43e4c0410aa8426df6f99658"
+      url "https://github.com/RefreshAgent/refreshagent/releases/download/v0.1.3/refreshagent-aarch64-apple-darwin"
+      sha256 "f6dbc639103e03232bad2cacbb5c93ed5dff81bf59be214d306246a5508d9ee1"
     end
     on_intel do
-      url "https://github.com/RefreshAgent/refreshagent/releases/download/v0.1.2/refreshagent-x86_64-apple-darwin"
-      sha256 "9ccfbd0143933168505bdb65fd69dcbc3f94269b8b86c202ade9cd2cd3005f5b"
+      url "https://github.com/RefreshAgent/refreshagent/releases/download/v0.1.3/refreshagent-x86_64-apple-darwin"
+      sha256 "e0c4bb305db0776da2f3854a2080b48bb1c269c018fe036f5be36f65aa14b0be"
     end
   end
   on_linux do
     on_arm do
-      url "https://github.com/RefreshAgent/refreshagent/releases/download/v0.1.2/refreshagent-aarch64-unknown-linux-gnu"
-      sha256 "5591dfe7370ecb93cd83f1b0da9c90420815bf0c6ee68b68b82addff4b526b23"
+      url "https://github.com/RefreshAgent/refreshagent/releases/download/v0.1.3/refreshagent-aarch64-unknown-linux-gnu"
+      sha256 "62ec2504c482b43cda79fde08174e50f57840ad7ee46283f582d3d5b2b7b3cb4"
     end
     on_intel do
-      url "https://github.com/RefreshAgent/refreshagent/releases/download/v0.1.2/refreshagent-x86_64-unknown-linux-gnu"
-      sha256 "fc08f3642a7ecbde4088b01eec2c336ee26cafa232efb25ce1391aa9a0542e6f"
+      url "https://github.com/RefreshAgent/refreshagent/releases/download/v0.1.3/refreshagent-x86_64-unknown-linux-gnu"
+      sha256 "a9dfb76d3382f043ea890788be4f2d13caa1a2eebfbc06a84994abd3deafe314"
     end
   end
 

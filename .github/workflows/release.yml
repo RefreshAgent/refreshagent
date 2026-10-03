@@ -86,6 +86,8 @@ jobs:
           PY
       - run: cargo fmt --check
       - run: cargo clippy --locked --all-targets -- -D warnings
+      - run: sh -n install.sh
+      - run: python3 -m unittest discover -s tests -p 'test_*.py'
       - run: cargo test --locked
       - run: cargo build --locked --release --target ${{ matrix.target }}
       - name: Stage binary and checksum
@@ -116,6 +118,9 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       RELEASE_COMMIT: ${{ needs.prepare.outputs.commit }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/download-artifact@v4
         with:
           path: dist
@@ -130,3 +135,19 @@ jobs:
           fi
           gh release upload "$RELEASE_TAG" dist/* --repo "$GITHUB_REPOSITORY" --clobber
           gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+      - name: Refresh Homebrew formula
+        shell: bash
+        run: |
+          latest=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)
+          if [ "$latest" != "$RELEASE_TAG" ]; then exit 0; fi
+          python3 scripts/update_homebrew.py --tag "$RELEASE_TAG"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Formula/refreshagent.rb
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Update Homebrew formula to $RELEASE_TAG"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1

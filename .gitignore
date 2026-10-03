@@ -1,3 +1,5 @@
 /target/
 .refreshagent/
 .env
+__pycache__/
+*.pyc

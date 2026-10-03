@@ -1,0 +1,36 @@
+name: Distribution
+on:
+  push:
+    branches: [main]
+    paths: ['Formula/**', 'install.sh', '.github/workflows/distribution.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  homebrew:
+    runs-on: macos-15
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_ANALYTICS: '1'
+    steps:
+      - name: Install from the public tap
+        run: |
+          brew tap RefreshAgent/tap https://github.com/RefreshAgent/refreshagent
+          brew install RefreshAgent/tap/refreshagent
+          brew test RefreshAgent/tap/refreshagent
+          refreshagent --version
+  installer:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install and execute a real release
+        shell: bash
+        run: |
+          install_dir="$RUNNER_TEMP/refreshagent smoke/bin"
+          REFRESHAGENT_INSTALL_DIR="$install_dir" REFRESHAGENT_NO_MODIFY_PATH=1 sh install.sh
+          "$install_dir/refreshagent" --version
+          REFRESHAGENT_INSTALL_DIR="$install_dir" REFRESHAGENT_NO_MODIFY_PATH=1 sh install.sh
+          "$install_dir/refreshagent.previous" --version

@@ -7,19 +7,51 @@ A Rust terminal interface and headless worker for macOS and Linux.
 No RefreshAgent account is required for local scanning, execution, scheduling or history.
 Your installed agent handles authentication and model usage under its own plan.
 
-## Install from source
+## Install
+
+No Rust compiler is needed. macOS and Linux, Intel/x86_64 and ARM64:
 
 ```sh
-git clone https://github.com/RefreshAgent/refreshagent.git
-cd refreshagent
-cargo install --path . --locked
-cd /path/to/your/website
-refreshagent
+curl -fsSL https://refreshagent.com/install.sh | sh
 ```
 
-Rust stable, Git, and an authenticated `codex` or `claude` installation are required.
-`gh` is additionally required for pull-request delivery. This initial release is
-source-installable; it is not yet published to crates.io or Homebrew.
+The installer verifies the release checksum and executable version, installs to
+`~/.local/bin` without sudo, and adds that directory to your bash/zsh/sh profile.
+Open a new terminal, then run `refreshagent` inside your website's Git repository.
+Automatic binary updates are built in. The canonical script is
+[install.sh](https://github.com/RefreshAgent/refreshagent/blob/main/install.sh).
+
+### Homebrew
+
+```sh
+brew tap RefreshAgent/tap https://github.com/RefreshAgent/refreshagent
+brew install RefreshAgent/tap/refreshagent
+```
+
+Use `brew upgrade refreshagent` for Homebrew installations. Each stable release
+refreshes the formula automatically. The explicit tap URL keeps the formula in
+this OSS repository.
+
+### Manual download and prerequisites
+
+Download the matching binary and `.sha256` file from
+[GitHub Releases](https://github.com/RefreshAgent/refreshagent/releases/latest),
+verify the SHA-256, make it executable, and place it on your PATH.
+Git is required for repository work. Execution also requires an authenticated
+`codex` or `claude` installation; local scanning does not require either agent.
+`gh` is additionally required for pull-request delivery.
+
+Installer options: set `REFRESHAGENT_VERSION=vX.Y.Z` to pin a stable release,
+`REFRESHAGENT_INSTALL_DIR=/absolute/path` to change the directory, or
+`REFRESHAGENT_NO_MODIFY_PATH=1` to manage PATH yourself. With a piped installer,
+pass these variables to `sh`, for example:
+
+```sh
+curl -fsSL https://refreshagent.com/install.sh | REFRESHAGENT_VERSION=v0.1.2 sh
+```
+
+Pinning the installer does not disable subsequent automatic updates; use
+`refreshagent update disable` if you need to stay on that version.
 
 Onboarding discovers the framework and likely content folders, then asks for the
 site URL, content source, writable roots, agent, validation command, delivery
@@ -149,10 +181,20 @@ if your site's repository has different ignore rules, exclude `.refreshagent/`.
 
 ## Development
 
+Contributors can build from source with stable Rust:
+
+```sh
+git clone https://github.com/RefreshAgent/refreshagent.git
+cd refreshagent
+cargo install --path . --locked
+```
+
 ```sh
 cargo fmt --check
 cargo clippy --all-targets -- -D warnings
 cargo test --locked
+sh -n install.sh
+python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
 Apache-2.0. Contributions welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -193,7 +235,7 @@ not an independent signing system.
 
 Maintainers: bump Cargo.toml/Cargo.lock and push to `main`. The release workflow
 builds/tests all four platforms, then creates the matching stable `vX.Y.Z` tag
-and publishes binaries/checksums. Already published versions are skipped.
+and publishes binaries/checksums, then refreshes the Homebrew formula. Already published versions are skipped.
 Pushing a matching version tag or dispatching a run for an existing tag also
 works. Draft releases can be resumed; published assets are never overwritten.
 Linux x86_64 binaries require Ubuntu 22.04-era glibc or newer; ARM64 binaries

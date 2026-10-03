@@ -2,6 +2,8 @@ name: Release binaries
 on:
   push:
     tags: ['v*']
+    branches: [main]
+    paths: ['Cargo.toml', '.github/workflows/release.yml']
   workflow_dispatch:
     inputs:
       tag:
@@ -14,7 +16,39 @@ concurrency:
   group: release-${{ github.event.inputs.tag || github.ref_name }}
   cancel-in-progress: false
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      commit: ${{ steps.version.outputs.commit }}
+      needed: ${{ steps.version.outputs.needed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          persist-credentials: false
+      - id: version
+        env:
+          REQUESTED_TAG: ${{ github.event.inputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import os, re, subprocess, tomllib, json
+          version = tomllib.load(open('Cargo.toml','rb'))['package']['version']
+          tag = 'v'+version
+          assert re.fullmatch(r'v\d+\.\d+\.\d+', tag), 'Stable versions only'
+          requested = os.environ.get('REQUESTED_TAG') or (os.environ['GITHUB_REF_NAME'] if os.environ['GITHUB_REF'].startswith('refs/tags/') else tag)
+          assert requested == tag, 'Requested tag must match Cargo.toml'
+          existing = subprocess.run(['gh','release','view',tag,'--repo',os.environ['GITHUB_REPOSITORY'],'--json','isDraft'],capture_output=True,text=True)
+          needed = existing.returncode != 0 or json.loads(existing.stdout)['isDraft']
+          commit = subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          with open(os.environ['GITHUB_OUTPUT'],'a') as out:
+              out.write(f'tag={tag}\ncommit={commit}\nneeded={str(needed).lower()}\n')
+          PY
   build:
+    needs: prepare
+    if: needs.prepare.outputs.needed == 'true'
+
     strategy:
       fail-fast: false
       matrix:
@@ -29,11 +63,11 @@ jobs:
             target: x86_64-apple-darwin
     runs-on: ${{ matrix.os }}
     env:
-      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.tag || github.ref_name }}
+          ref: ${{ needs.prepare.outputs.commit }}
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -73,13 +107,14 @@ jobs:
           path: dist/*
           if-no-files-found: error
   publish:
-    needs: build
+    needs: [prepare, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     env:
-      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
       GH_TOKEN: ${{ github.token }}
+      RELEASE_COMMIT: ${{ needs.prepare.outputs.commit }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -91,7 +126,7 @@ jobs:
           if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             test "$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" = true
           else
-            gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --title "RefreshAgent $RELEASE_TAG" --generate-notes
+            gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$RELEASE_COMMIT" --draft --title "RefreshAgent $RELEASE_TAG" --generate-notes
           fi
           gh release upload "$RELEASE_TAG" dist/* --repo "$GITHUB_REPOSITORY" --clobber
           gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest

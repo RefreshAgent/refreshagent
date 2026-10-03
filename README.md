@@ -191,9 +191,11 @@ sudo. The install directory must be writable. Release checks/downloads trust
 GitHub and repository release maintainers; checksums detect corruption and are
 not an independent signing system.
 
-Maintainers: bump Cargo.toml/Cargo.lock, push a matching stable `vX.Y.Z` tag, and
-the release workflow builds/tests all four platforms before publishing binaries
-and checksums. A manually dispatched run can build an existing version tag.
+Maintainers: bump Cargo.toml/Cargo.lock and push to `main`. The release workflow
+builds/tests all four platforms, then creates the matching stable `vX.Y.Z` tag
+and publishes binaries/checksums. Already published versions are skipped.
+Pushing a matching version tag or dispatching a run for an existing tag also
+works. Draft releases can be resumed; published assets are never overwritten.
 Linux x86_64 binaries require Ubuntu 22.04-era glibc or newer; ARM64 binaries
 require Ubuntu 24.04-era glibc or newer. macOS compatibility follows the build
 runner's SDK/deployment target. An incompatible candidate fails its startup check

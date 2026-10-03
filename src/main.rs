@@ -15,6 +15,11 @@ struct Cli {
 }
 #[derive(Subcommand)]
 enum Commands {
+    /// Check/install GitHub release updates (works outside a site repository).
+    Update {
+        #[command(subcommand)]
+        action: Option<Update>,
+    },
     /// Optional managed Search Console data, using your account API key.
     Cloud {
         #[command(subcommand)]
@@ -80,10 +85,56 @@ enum Cloud {
     },
     Sync,
 }
+#[derive(Subcommand)]
+enum Update {
+    Check,
+    Enable,
+    Disable,
+    Rollback,
+}
 fn main() -> Result<()> {
     let cli = Cli::parse();
+    if let Some(Commands::Update { action }) = &cli.command {
+        match action {
+            Some(Update::Enable) => {
+                refreshagent::update::enable(true)?;
+                println!("Automatic updates enabled");
+            }
+            Some(Update::Disable) => {
+                refreshagent::update::enable(false)?;
+                println!("Automatic updates disabled");
+            }
+            Some(Update::Rollback) => refreshagent::update::rollback()?,
+            _ => println!(
+                "{:?}",
+                refreshagent::update::check(false, matches!(action, Some(Update::Check)))?
+            ),
+        }
+        return Ok(());
+    }
+    let update_executable = std::env::current_exe()?;
+    if matches!(
+        cli.command,
+        None | Some(Commands::Tick) | Some(Commands::Run { dry_run: false, .. })
+    ) && std::env::var_os("REFRESHAGENT_UPDATED").is_none()
+    {
+        match refreshagent::update::check(true, false) {
+            Ok(refreshagent::update::Outcome::Updated(v)) => {
+                eprintln!("Updated RefreshAgent to {v}");
+                use std::os::unix::process::CommandExt;
+                let error = std::process::Command::new(&update_executable)
+                    .args(std::env::args_os().skip(1))
+                    .env("REFRESHAGENT_UPDATED", "1")
+                    .exec();
+                return Err(error.into());
+            }
+            Err(e) => eprintln!("Update deferred: {e}. Continuing with installed version."),
+            _ => {}
+        }
+    }
     let root = config::repo_root(&cli.project)?;
     match cli.command {
+        Some(Commands::Update { .. }) => unreachable!(),
         None => ui::dashboard(&root)?,
         Some(Commands::Cloud { action }) => match action {
             Cloud::Connect { property, mapping } => {

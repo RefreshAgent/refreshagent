@@ -78,6 +78,7 @@ pub fn run(
     events: Option<&Sender<String>>,
 ) -> Result<String> {
     c.validate()?;
+    let _installation_lock = crate::update::execution_lock()?;
     agent::reset_cancellation();
     if c.content_mode != "repository" {
         bail!("API/mixed writes are not implemented yet. Repository execution requires content_mode=repository.");

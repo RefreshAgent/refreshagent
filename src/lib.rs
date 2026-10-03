@@ -7,3 +7,4 @@ pub mod runner;
 pub mod scan;
 pub mod service;
 pub mod ui;
+pub mod update;

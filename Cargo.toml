@@ -1,6 +1,6 @@
 [package]
 name = "refreshagent"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Autonomous SEO worker using your local coding agent"
 license = "Apache-2.0"
@@ -18,6 +18,7 @@ fs2 = "0.4"
 signal-hook = "0.3"
 libc = "0.2"
 sha2 = "0.10"
+semver = "1"
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 

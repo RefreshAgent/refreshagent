@@ -156,3 +156,46 @@ cargo test --locked
 ```
 
 Apache-2.0. Contributions welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Built-in updates
+
+Installed binaries automatically check for a newer stable GitHub release once a
+day when starting the TUI, a manual run, or a scheduled tick. The check runs before
+work starts. An installation lock defers replacement while any worker using that
+binary is active. A running TUI does not check in the middle of a task.
+
+```sh
+refreshagent update check
+refreshagent update
+refreshagent update disable
+refreshagent update enable
+refreshagent update rollback
+```
+
+These commands work outside a site repository. `REFRESHAGENT_NO_UPDATE=1` disables
+automatic checks for one invocation. Settings live in the user's configuration
+directory, independently of site and Cloud configuration. Automatic failures
+back off for a day and leave the installed version usable.
+
+Updates download the matching macOS Intel/Apple Silicon or Linux x86_64/ARM64
+binary from this repository's stable GitHub releases. The updater checks the
+SHA-256 file (and GitHub asset digest when supplied), verifies the version with a
+bounded startup check, then atomically replaces the binary at the same path.
+It retains `refreshagent.previous` beside the executable for rollback. Rollback
+disables automatic updates until explicitly re-enabled. Configurations, agent
+credentials, run histories and service paths are preserved.
+
+Development builds under `target/`, Homebrew Cellar and Nix-store installations
+are not self-replaced; use their build/package manager. The updater never invokes
+sudo. The install directory must be writable. Release checks/downloads trust
+GitHub and repository release maintainers; checksums detect corruption and are
+not an independent signing system.
+
+Maintainers: bump Cargo.toml/Cargo.lock, push a matching stable `vX.Y.Z` tag, and
+the release workflow builds/tests all four platforms before publishing binaries
+and checksums. A manually dispatched run can build an existing version tag.
+Linux x86_64 binaries require Ubuntu 22.04-era glibc or newer; ARM64 binaries
+require Ubuntu 24.04-era glibc or newer. macOS compatibility follows the build
+runner's SDK/deployment target. An incompatible candidate fails its startup check
+and leaves the installed binary untouched. No update is installed until a release
+with matching assets is published.
